@@ -1,0 +1,498 @@
+{
+  "info": {
+    "name": "Canteen API",
+    "description": "Bộ kiểm thử CRUD API hệ thống thực đơn căng tin - Lab 5",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01-Read",
+      "item": [
+        {
+          "name": "TC01 - Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"status = ok\", () => pm.expect(pm.response.json().status).to.eql(\"ok\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC02 - Danh sách món",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/menu-items"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Có 4 món mẫu\", () => pm.expect(pm.response.json()).to.have.lengthOf(4));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC03 - Lọc và sắp xếp",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/menu-items?category=bun_pho&sort=price&order=desc"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const items = pm.response.json();",
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Chỉ có món bun_pho\", () => {",
+                  "    items.forEach(i => pm.expect(i.category).to.eql(\"bun_pho\"));",
+                  "});",
+                  "pm.test(\"Giá giảm dần\", () => {",
+                  "    for (let k = 1; k < items.length; k++) {",
+                  "        pm.expect(items[k-1].price).to.be.at.least(items[k].price);",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC04 - Món hết hàng",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/menu-items?available=false"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const list = pm.response.json();",
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Có 1 món đã hết\", () => pm.expect(list).to.have.lengthOf(1));",
+                  "pm.test(\"Là Bánh đa cua\", () => pm.expect(list[0].name).to.eql(\"Bánh đa cua\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC05 - Chi tiết món",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/menu-items/1"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Đúng id = 1\", () => pm.expect(pm.response.json().id).to.eql(1));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC06 - ID không tồn tại",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/menu-items/999"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "pm.test(\"404 Not Found\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC07 - ID không hợp lệ",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/menu-items/0"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "pm.test(\"422 Unprocessable Entity\", () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02-Create",
+      "item": [
+        {
+          "name": "TC08 - Tạo món mới",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/menu-items",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"{{itemName}}\",\"category\":\"an_vat\",\"price\":15000}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"itemName\", \"Mon thu \" + Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "pm.test(\"201 Created\", () => pm.response.to.have.status(201));",
+                  "const item = pm.response.json();",
+                  "pm.test(\"Có header Location đúng\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"Location\")).to.eql(\"/menu-items/\" + item.id);",
+                  "});",
+                  "pm.test(\"Mặc định available = true\", () => pm.expect(item.available).to.be.true);",
+                  "pm.collectionVariables.set(\"itemId\", item.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC08 - Tao mon moi",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/menu-items",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{itemName}}\",\n  \"category\": \"an_vat\",\n  \"price\": 15000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"itemName\", \"Mon thu \" + Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 Created\", () => pm.response.to.have.status(201));",
+                  "const item = pm.response.json();",
+                  "pm.test(\"Co ID moi\", () => pm.expect(item.id).to.be.a(\"number\"));",
+                  "pm.test(\"Ten mon dung\", () => pm.expect(item.name).to.eql(pm.collectionVariables.get(\"itemName\")));",
+                  "pm.test(\"Danh muc an_vat\", () => pm.expect(item.category).to.eql(\"an_vat\"));",
+                  "pm.test(\"Gia 15000\", () => pm.expect(item.price).to.eql(15000));",
+                  "pm.test(\"Mac dinh available = true\", () => pm.expect(item.available).to.be.true);",
+                  "pm.test(\"Co header Location\", () => pm.expect(pm.response.headers.get(\"Location\")).to.eql(\"/menu-items/\" + item.id));",
+                  "pm.collectionVariables.set(\"itemId\", item.id);",
+                  "console.log(\"Da luu itemId:\", item.id);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03-Update",
+      "item": [
+        {
+          "name": "TC09 - PUT cập nhật toàn bộ",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/menu-items/{{itemId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"{{itemName}} sua\",\"category\":\"an_vat\",\"price\":20000,\"available\":true}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Giá đổi thành 20000\", () => pm.expect(pm.response.json().price).to.eql(20000));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC10 - PATCH cập nhật một phần",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/menu-items/{{itemId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"available\":false}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const it = pm.response.json();",
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"available = false\", () => pm.expect(it.available).to.be.false);",
+                  "pm.test(\"Giá giữ nguyên 20000\", () => pm.expect(it.price).to.eql(20000));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC11 - PATCH trùng tên",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/menu-items/{{itemId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Trà chanh\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"409 Conflict\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04-Delete",
+      "item": [
+        {
+          "name": "TC12 - Xóa món",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/menu-items/{{itemId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"204 No Content\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC13 - Kiểm tra món đã xóa",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/menu-items/{{itemId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"404 Not Found\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05-Data-driven",
+      "item": [
+        {
+          "name": "DD - Kiểm thử dữ liệu CSV",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/menu-items",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"{{name}}\",\"category\":\"{{category}}\",\"price\":\"{{price}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const c = pm.iterationData.get(\"case\");",
+                  "const expected = Number(pm.iterationData.get(\"expected\"));",
+                  "pm.test(`[${c}] trả về ${expected}`, () => {",
+                  "    pm.response.to.have.status(expected);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test(\"Phản hồi dưới 500 ms\", () => {",
+          "    pm.expect(pm.response.responseTime).to.be.below(500);",
+          "});",
+          "if (pm.response.code !== 204) {",
+          "    pm.test(\"Trả về JSON\", () => {",
+          "        pm.response.to.have.header(\"Content-Type\", \"application/json\");",
+          "    });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "itemName",
+      "value": ""
+    },
+    {
+      "key": "itemId",
+      "value": ""
+    }
+  ]
+}
